@@ -7,9 +7,15 @@ from services import ShippingService
 
 class Product:
     def __init__(self, available_amount: int, name: str, price: float):
+        if price < 0:
+            raise ValueError("Price cannot be negative")
+        if available_amount < 0:
+            raise ValueError("Available amount cannot be negative")
+
         self.available_amount = available_amount
         self.name = name
         self.price = price
+
 
     def is_available(self, requested_amount: int) -> bool:
         return self.available_amount >= requested_amount
@@ -69,8 +75,12 @@ class Order:
     order_id: str = str(uuid.uuid4())
 
     def place_order(self, shipping_type: str, due_date: datetime = None) -> str:
+        if self.cart.is_empty():
+            raise ValueError("Cannot place an order with an empty cart")
+
         if not due_date:
             due_date = datetime.now(timezone.utc) + timedelta(seconds=3)
+
         product_ids = self.cart.submit_cart_order()
         return self.shipping_service.create_shipping(shipping_type, product_ids, self.order_id, due_date)
 
