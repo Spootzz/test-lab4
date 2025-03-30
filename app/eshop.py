@@ -13,19 +13,19 @@ from services import ShippingService
 class Product:
     """Represents a product in the e-shop."""
 
-    def __init__(self, name: str, price: float, availability: int):
-        """Initializes a product with name, price, and availability."""
+    def __init__(self, name: str, price: float, available_amount: int):
+        """Initializes a product with name, price, and available amount."""
         if price < 0:
             raise ValueError("Price cannot be negative")
-        if availability < 0:
-            raise ValueError("Availability cannot be negative")
+        if available_amount < 0:
+            raise ValueError("Available amount cannot be negative")
         self.name = name
         self.price = price
-        self.availability = availability
+        self.available_amount = available_amount
 
     def is_available(self, amount: int) -> bool:
         """Checks if the product is available in the given amount."""
-        return self.availability >= amount
+        return self.available_amount >= amount
 
 class ShoppingCart:
     """Represents a shopping cart containing multiple products."""
@@ -64,10 +64,11 @@ class Order:
     def place_order(self):
         """Processes the order by deducting stock and initiating shipping."""
         for product, amount in self.cart.items.items():
-            product.availability -= amount
+            product.available_amount -= amount
         self.shipping_service.create_shipping(self)
         self.cart.items.clear()
         self.status = "Shipped"
+
 
 
 @dataclass
