@@ -54,7 +54,7 @@ class TestEshop(unittest.TestCase):
 
     def test_place_order_empties_cart(self):
         self.cart.add_product(self.product1, 4)
-        self.order.place_order()
+        self.order.place_order("standard")
         self.assertEqual(len(self.cart.products), 0)
 
 
