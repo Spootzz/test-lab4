@@ -45,7 +45,7 @@ jobs:
 
       - name: Run BDD tests (Behave)
         run: |
-          behave features/steps/bdd.py
+          behave features/steps/bdd
 
       - name: Run integration tests
         run: |
