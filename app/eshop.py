@@ -55,20 +55,20 @@ class Order:
 
     def __init__(self, cart: ShoppingCart, shipping_service):
         """Initializes an order with a cart and shipping service."""
-        if cart.is_empty():
-            raise ValueError("Cannot place an order with an empty cart")
         self.cart = cart
         self.shipping_service = shipping_service
         self.status = "Pending"
 
     def place_order(self):
         """Processes the order by deducting stock and initiating shipping."""
+        if self.cart.is_empty():
+            raise ValueError("Cannot place an order with an empty cart")
+
         for product, amount in self.cart.items.items():
             product.available_amount -= amount
         self.shipping_service.create_shipping(self)
         self.cart.items.clear()
         self.status = "Shipped"
-
 
 
 @dataclass
