@@ -48,7 +48,7 @@ class TestEshop(unittest.TestCase):
     def test_place_order_reduces_stock(self):
         self.cart.add_product(self.product1, 4)
         self.cart.add_product(self.product2, 2)
-        self.order.place_order()
+        self.order.place_order("standard")
         self.assertEqual(self.product1.available_amount, 6)
         self.assertEqual(self.product2.available_amount, 3)
 
