@@ -37,11 +37,11 @@ jobs:
       - name: Run unit tests
         run: |
           pytest tests/unit --maxfail=1 --disable-warnings -v
-          coverage run -m pytest tests/unit
+          coverage run -m pytest tests/unit.py
           coverage report -m
 
       - name: Run BDD tests (Behave)
-        run: behave features/steps/bdd
+        run: behave features/steps/bdd.py
 
       - name: Run integration tests
         run: |
