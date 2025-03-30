@@ -8,7 +8,7 @@ class TestEshop(unittest.TestCase):
         self.product1 = Product(name='Test1', price=100.0, available_amount=10)
         self.product2 = Product(name='Test2', price=50.0, available_amount=5)
         self.cart = ShoppingCart()
-        self.order = Order()
+        self.order = Order(self.cart, MagicMock())
         self.order.cart = self.cart
 
     def tearDown(self):
