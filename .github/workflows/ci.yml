@@ -37,7 +37,7 @@ jobs:
       - name: Run unit tests
         run: |
           pytest tests/unit --maxfail=1 --disable-warnings -v
-          coverage run -m pytest tests/unit.py
+          coverage run -m pytest tests/unit
           coverage report -m
 
       - name: Run BDD tests (Behave)
