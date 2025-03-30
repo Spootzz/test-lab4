@@ -34,7 +34,6 @@ Feature: Comprehensive testing of Product, ShoppingCart, and Order classes
     When I add the product to the cart in amount 15
     Then The product should not be added to the cart successfully
 
-
   Scenario: Remove product from cart
     Given I create a product with name "Iphone", price 1000.0, and availability 10
     And I have an empty shopping cart
@@ -46,11 +45,13 @@ Feature: Comprehensive testing of Product, ShoppingCart, and Order classes
     Given I create a product with name "Iphone", price 1000.0, and availability 10
     And I have an empty shopping cart
     And I add the product to the cart in amount 5
+    And I have a mock shipping service
     When I place an order
     Then The cart should be empty
     And The product availability should be 5
 
   Scenario: Submit order with empty cart
     Given I have an empty shopping cart
+    And I have a mock shipping service
     When I try to place an order
     Then The order should not be placed

@@ -1,10 +1,18 @@
 from behave import given, when, then
 from app.eshop import Product, ShoppingCart, Order
 
+# Мок-об'єкт для ShippingService
+class MockShippingService:
+    def create_shipping(self, shipping_type, product_ids, order_id, due_date):
+        return f"MockShipping-{order_id}"
+
+    def check_status(self, shipping_id):
+        return "Delivered"
+
 @given('I create a product with name "{name}", price {price:f}, and availability {availability:d}')
 def step_create_product(context, name, price, availability):
     try:
-        context.product = Product(name, price, availability)
+        context.product = Product(availability, name, price)
         context.product_creation_success = True
     except ValueError:
         context.product_creation_success = False
@@ -13,7 +21,7 @@ def step_create_product(context, name, price, availability):
 def step_verify_product(context, name, price, availability):
     assert context.product.name == name
     assert context.product.price == price
-    assert context.product.availability == availability
+    assert context.product.available_amount == availability
 
 @then('The product creation should fail')
 def step_verify_creation_failure(context):
@@ -60,12 +68,16 @@ def step_remove_product(context):
 def step_verify_cart_empty(context):
     assert context.cart.is_empty(), "Cart should be empty"
 
+@given('I have a mock shipping service')
+def step_mock_shipping_service(context):
+    context.shipping_service = MockShippingService()
+
 @when('I place an order')
 @when('I try to place an order')
 def step_place_order(context):
-    context.order = Order(context.cart)
+    context.order = Order(context.cart, context.shipping_service)
     try:
-        context.order.place_order()
+        context.order.place_order("standard")
         context.order_success = True
     except ValueError:
         context.order_success = False
@@ -76,4 +88,4 @@ def step_order_should_not_be_placed(context):
 
 @then('The product availability should be {availability:d}')
 def step_check_product_availability(context, availability):
-    assert context.product.availability == availability, f"Expected availability {availability}, but got {context.product.availability}"
+    assert context.product.available_amount == availability, f"Expected availability {availability}, but got {context.product.available_amount}"

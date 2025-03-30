@@ -2,8 +2,6 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
-from services import ShippingService
-
 
 class Product:
     def __init__(self, available_amount: int, name: str, price: float):
@@ -30,16 +28,12 @@ class Product:
     def __str__(self):
         return self.name
 
-
 class ShoppingCart:
     def __init__(self):
         self.products: Dict[Product, int] = {}
 
-    def contains_product(self, product: Product) -> bool:
-        return product in self.products
-
-    def calculate_total(self) -> float:
-        return sum(p.price * count for p, count in self.products.items())
+    def is_empty(self) -> bool:
+        return not bool(self.products)
 
     def add_product(self, product: Product, amount: int):
         if not product.is_available(amount):
@@ -58,24 +52,16 @@ class ShoppingCart:
         self.products.clear()
         return product_ids
 
-
 @dataclass
 class Order:
     cart: ShoppingCart
-    shipping_service: ShippingService
+    shipping_service: object
     order_id: str = str(uuid.uuid4())
 
     def place_order(self, shipping_type: str, due_date: datetime = None) -> str:
+        if self.cart.is_empty():
+            raise ValueError("Cannot place an order with an empty cart")
         if not due_date:
             due_date = datetime.now(timezone.utc) + timedelta(seconds=3)
         product_ids = self.cart.submit_cart_order()
         return self.shipping_service.create_shipping(shipping_type, product_ids, self.order_id, due_date)
-
-
-@dataclass
-class Shipment:
-    shipping_id: str
-    shipping_service: ShippingService
-
-    def check_shipping_status(self) -> str:
-        return self.shipping_service.check_status(self.shipping_id)
