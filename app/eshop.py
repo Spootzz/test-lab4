@@ -1,83 +1,67 @@
-"""
-This module contains classes for an e-commerce application,
-including Product, ShoppingCart, and Order.
-"""
-
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
-from services import ShippingService
-
 
 class Product:
-    """Represents a product in the e-shop."""
-
-    def __init__(self, name: str, price: float, available_amount: int):
-        """Initializes a product with name, price, and available amount."""
-        if price < 0:
-            raise ValueError("Price cannot be negative")
-        if available_amount < 0:
-            raise ValueError("Available amount cannot be negative")
+    def __init__(self, available_amount: int, name: str, price: float):
+        self.available_amount = available_amount
         self.name = name
         self.price = price
-        self.available_amount = available_amount
 
-    def is_available(self, amount: int) -> bool:
-        """Checks if the product is available in the given amount."""
-        return self.available_amount >= amount
+    def is_available(self, requested_amount: int) -> bool:
+        return self.available_amount >= requested_amount
 
-class ShoppingCart:
-    """Represents a shopping cart containing multiple products."""
+    def buy(self, requested_amount: int):
+        if not self.is_available(requested_amount):
+            raise ValueError(f"Not enough stock for {self.name}")
+        self.available_amount -= requested_amount
 
-    def __init__(self):
-        """Initializes an empty shopping cart."""
-        self.items = {}
-
-    def add_product(self, product: Product, amount: int) -> bool:
-        """Adds a product to the cart if enough stock is available."""
-        if product.is_available(amount):
-            self.items[product] = self.items.get(product, 0) + amount
-            return True
+    def __eq__(self, other):
+        if isinstance(other, Product):
+            return self.name == other.name
         return False
 
-    def remove_product(self, product: Product):
-        """Removes a product from the cart."""
-        if product in self.items:
-            del self.items[product]
+    def __hash__(self):
+        return hash(self.name)
+
+    def __str__(self):
+        return self.name
+
+class ShoppingCart:
+    def __init__(self):
+        self.products: Dict[Product, int] = {}
 
     def is_empty(self) -> bool:
-        """Checks if the shopping cart is empty."""
-        return len(self.items) == 0
+        return not bool(self.products)
 
-class Order:
-    """Represents an order created from the shopping cart."""
+    def add_product(self, product: Product, amount: int):
+        if not product.is_available(amount):
+            raise ValueError(f"Product {product.name} has only {product.available_amount} items available")
+        self.products[product] = self.products.get(product, 0) + amount
 
-    def __init__(self, cart: ShoppingCart, shipping_service):
-        """Initializes an order with a cart and shipping service."""
-        self.cart = cart
-        self.shipping_service = shipping_service
-        self.status = "Pending"
+    def remove_product(self, product: Product):
+        if product in self.products:
+            del self.products[product]
 
-    def place_order(self):
-        """Processes the order by deducting stock and initiating shipping."""
-        if self.cart.is_empty():
-            raise ValueError("Cannot place an order with an empty cart")
-
-        for product, amount in self.cart.items.items():
-            product.available_amount -= amount
-        self.shipping_service.create_shipping(self)
-        self.cart.items.clear()
-        self.status = "Shipped"
-
+    def submit_cart_order(self) -> List[str]:
+        product_ids = []
+        for product, count in self.products.items():
+            product.buy(count)
+            product_ids.append(str(product))
+        self.products.clear()
+        return product_ids
 
 @dataclass
-class Shipment:
-    """Represents a shipment and allows checking its status."""
+class Order:
+    cart: ShoppingCart
+    shipping_service: object
+    order_id: str = str(uuid.uuid4())
 
-    shipping_id: str
-    shipping_service: ShippingService
-
-    def check_shipping_status(self) -> str:
-        """Returns the current status of the shipment."""
-        return self.shipping_service.check_status(self.shipping_id)
+    def place_order(self, shipping_type: str, due_date: datetime = None) -> str:
+        if self.cart.is_empty():
+            raise ValueError("Cannot place an order with an empty cart")
+        if not due_date:
+            due_date = datetime.now(timezone.utc) + timedelta(seconds=3)
+        product_ids = self.cart.submit_cart_order()
+        return self.shipping_service.create_shipping(shipping_type, product_ids, self.order_id, due_date)
